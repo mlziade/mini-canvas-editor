@@ -1,3 +1,9 @@
+## Unreleased
+
+Fork additions: quick selection, magic wand, shapes (ellipse, triangle, star, polygon, line), arrows, gradient tool and gradient fills, eraser, clone stamp, blur and pixelate (brush and box), image filters, undo and redo, keyboard shortcuts.
+New core shapes: `MceArrow`, `MceEllipse`, `MceTriangle`, `MceStar`.
+The rect toolbar now changes the rect fill instead of the brush color.
+
 ## 0.3.2
 
 Changed the project location on GitHub to [nocode-js/mini-canvas-editor](https://github.com/nocode-js/mini-canvas-editor).

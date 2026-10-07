@@ -66,6 +66,38 @@ Create the editor by:
 miniCanvasEditor.Editor.createBlank(placeholder, 200, 300, {});
 ```
 
+## 🎨 Photo editing tools (this fork)
+
+This fork adds raster tools on top of the original shapes, brush and text:
+
+| Tool | Key | Notes |
+|---|---|---|
+| Quick selection | Q | Paint over an area and the selection grows over similar colors. |
+| Magic wand | W | Click to select similar pixels. Tolerance, contiguous option. Shift adds, Alt subtracts. |
+| Shapes | U | Rectangle, ellipse, triangle, star, polygon and line. Shift keeps the sides equal. |
+| Arrow | A | Head on one end, both ends or none. Shift snaps to 45 degree steps. |
+| Gradient | G | Drag to paint a linear or radial gradient. Fills the selection when there is one. |
+| Eraser | E | Soft or hard brush. |
+| Clone stamp | S | Alt + click picks the source, then drag to paint a copy. |
+| Blur and pixelate | O | Brush, or drag a box. Useful to hide private details. |
+
+With a selection you can delete the pixels, cut or copy them to a new layer, blur or pixelate them, or fill them with a color.
+Image layers have filters in the properties panel (brightness, contrast, saturation, hue, noise, blur, pixelate and looks like sepia).
+Shapes can have a linear or radial gradient fill.
+
+Undo and redo (`Ctrl+Z`, `Ctrl+Shift+Z`) cover every change. `[` and `]` change the brush size, `Delete` removes the selected pixels or layers and `Ctrl+D` clears the selection.
+Turn the shortcuts off with `shortcuts: false`, hide the undo buttons with `history: false`, and disable a tool with `eraser: false`, `clone: false` and so on.
+
+```ts
+const editor = Editor.createFromImage(placeholder, image, { fitToWorkspace: true }, { clone: false });
+editor.undo();
+editor.redo();
+editor.setMode(EditorMode.blur);
+```
+
+Pixel tools edit the image layer under the pointer. Layers that are not images (shapes, text, paths) are converted to images the first time a pixel tool touches them.
+Selections are not part of the undo history. The selection outline is never included in `editor.render()`.
+
 ## 💡 License
 
 This project is released under the MIT license.
