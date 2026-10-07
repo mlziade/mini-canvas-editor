@@ -98,6 +98,25 @@ editor.setMode(EditorMode.blur);
 Pixel tools edit the image layer under the pointer. Layers that are not images (shapes, text, paths) are converted to images the first time a pixel tool touches them.
 Selections are not part of the undo history. The selection outline is never included in `editor.render()`.
 
+### Installing the fork from tarballs
+
+The fork is not published to npm. Build the two packages as tarballs and install them from files:
+
+```
+pnpm install --ignore-scripts --filter ./core --filter ./editor
+pnpm run pack:tarballs        # writes tarballs/mini-canvas-core-<version>.tgz and tarballs/mini-canvas-editor-<version>.tgz
+```
+
+Then in your project, install both together so the editor finds the matching core:
+
+```
+npm install ./vendor/mini-canvas-core-0.4.0.tgz ./vendor/mini-canvas-editor-0.4.0.tgz
+```
+
+You can also attach the two files to a GitHub release and install them by URL, for example
+`npm install https://github.com/<you>/mini-canvas-editor/releases/download/v0.4.0/mini-canvas-core-0.4.0.tgz <same for the editor>`.
+Bump the version in `core/package.json` and `editor/package.json` before packing a new build.
+
 ## 💡 License
 
 This project is released under the MIT license.
