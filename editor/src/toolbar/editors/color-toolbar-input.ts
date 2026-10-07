@@ -4,6 +4,7 @@ import { SimpleEvent } from '../../core/simple-event';
 
 export interface ColorToolbarInputComponent extends Component {
 	readonly onChanged: SimpleEvent<string>;
+	setValue(value: string): void;
 }
 
 export function colorToolbarInput(labelText: string, initialValue: string): ColorToolbarInputComponent {
@@ -32,6 +33,9 @@ export function colorToolbarInput(labelText: string, initialValue: string): Colo
 	view.appendChild(input);
 	return {
 		view,
-		onChanged
+		onChanged,
+		setValue(value: string) {
+			input.value = value;
+		}
 	};
 }

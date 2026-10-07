@@ -8,6 +8,9 @@ import { EditorState } from './editor-state';
 import { FabricObject, MceImage, MceImageJSON, MceImageProps, MceStaticCanvas, Point, TOptions } from 'mini-canvas-core';
 import { LayoutController } from './layout-controller';
 import { Toolbar } from './toolbar/toolbar';
+import { EditorMode } from './editor-configuration';
+import { KeyboardController } from './keyboard-controller';
+import { SelectionOverlay } from './workspace/selection-overlay';
 
 export interface CreateFromImageOptions {
 	selectable?: boolean;
@@ -53,6 +56,8 @@ export class Editor {
 		}
 		const layer = new MceImage(image, layerOptions);
 		editor.add(layer);
+		// The image is the starting point, so it cannot be undone.
+		editor.state.history.reset();
 
 		if (imageOptions.selectable === false && imageOptions.select) {
 			throw new Error('Cannot select an image that is not selectable');
@@ -92,7 +97,12 @@ export class Editor {
 
 		const layoutController = LayoutController.create(view);
 
-		const editor = new Editor(view, workspace, state, layoutController);
+		state.history.attach();
+		const overlay = SelectionOverlay.create(state);
+		const keyboard = configuration.shortcuts === false ? null : KeyboardController.create(state, view, configuration);
+
+		const editor = new Editor(view, workspace, state, layoutController, overlay, keyboard);
+		state.history.onChanged.subscribe(editor.onAnyChange);
 		state.canvas.on('object:added', editor.onAnyChange);
 		state.canvas.on('object:modified', editor.onAnyChange);
 		state.canvas.on('object:moving', editor.onAnyChange);
@@ -117,12 +127,45 @@ export class Editor {
 		private readonly view: HTMLElement,
 		private readonly workspace: Workspace,
 		private readonly state: EditorState,
-		private readonly layoutController: LayoutController
+		private readonly layoutController: LayoutController,
+		private readonly overlay: SelectionOverlay,
+		private readonly keyboard: KeyboardController | null
 	) {}
 
 	private readonly onAnyChange = () => {
 		this.onChanged.forward();
 	};
+
+	public undo(): boolean {
+		return this.state.history.undo();
+	}
+
+	public redo(): boolean {
+		return this.state.history.redo();
+	}
+
+	public canUndo(): boolean {
+		return this.state.history.canUndo();
+	}
+
+	public canRedo(): boolean {
+		return this.state.history.canRedo();
+	}
+
+	/**
+	 * Forgets the undo history and takes the current state as the starting point.
+	 */
+	public clearHistory() {
+		this.state.history.reset();
+	}
+
+	public getMode(): EditorMode {
+		return this.state.mode;
+	}
+
+	public setMode(mode: EditorMode) {
+		this.state.setMode(mode);
+	}
 
 	public getWidth(): number {
 		return this.state.canvas.workspaceWidth;
@@ -194,6 +237,9 @@ export class Editor {
 	}
 
 	public async destroy(): Promise<void> {
+		this.keyboard?.destroy();
+		this.overlay.destroy();
+		this.state.history.detach();
 		await this.workspace.destroy();
 		this.layoutController.destroy();
 		this.view.parentElement?.removeChild(this.view);

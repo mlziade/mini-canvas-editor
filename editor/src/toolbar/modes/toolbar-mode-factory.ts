@@ -3,6 +3,8 @@ import { EditorMode } from '../../editor-configuration';
 import { DestroyableComponent } from '../../components/component';
 import { RectToolbarMode } from './rect-toolbar-mode';
 import { BrushToolbarMode } from './brush-toolbar-mode';
+import { OptionsToolbarMode } from './options-toolbar-mode';
+import { createToolSpecs } from './tool-toolbars';
 
 export class ToolbarModeFactory {
 	public static create(mode: EditorMode, state: EditorState): DestroyableComponent | null {
@@ -12,6 +14,7 @@ export class ToolbarModeFactory {
 			case EditorMode.brush:
 				return BrushToolbarMode.create(state);
 		}
-		return null;
+		const specs = createToolSpecs(mode, state);
+		return specs ? OptionsToolbarMode.create(state, specs) : null;
 	}
 }

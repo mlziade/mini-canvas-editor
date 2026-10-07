@@ -7,6 +7,26 @@ import { ToolboxZoom } from './toolbox-zoom';
 import { openImageAction } from './actions/open-image-action';
 import { EditorConfiguration, EditorMode } from '../editor-configuration';
 
+export const SHORTCUT_KEYS: Partial<Record<EditorMode, string>> = {
+	[EditorMode.select]: 'V',
+	[EditorMode.rect]: 'R',
+	[EditorMode.shape]: 'U',
+	[EditorMode.arrow]: 'A',
+	[EditorMode.textbox]: 'T',
+	[EditorMode.brush]: 'B',
+	[EditorMode.eraser]: 'E',
+	[EditorMode.clone]: 'S',
+	[EditorMode.blur]: 'O',
+	[EditorMode.magicWand]: 'W',
+	[EditorMode.quickSelect]: 'Q',
+	[EditorMode.gradient]: 'G'
+};
+
+function withHint(title: string, mode: EditorMode, shortcuts: boolean): string {
+	const hint = SHORTCUT_KEYS[mode];
+	return shortcuts && hint ? `${title} (${hint})` : title;
+}
+
 export class Toolbox implements Component {
 	public static create(state: EditorState, configuration: EditorConfiguration) {
 		const view = Html.div({
@@ -21,25 +41,69 @@ export class Toolbox implements Component {
 		view.appendChild(top);
 		view.appendChild(bottom);
 
-		let imageItem: ToolboxItem | null = null;
-		const items = [
-			ToolboxItem.create(Icons.cursor, 'Select', EditorMode.select),
-			configuration.rect !== false && ToolboxItem.create(Icons.rect, 'Rect', EditorMode.rect),
-			configuration.textbox !== false && ToolboxItem.create(Icons.text, 'Textbox', EditorMode.textbox),
-			configuration.brush !== false && ToolboxItem.create(Icons.brush, 'Brush', EditorMode.brush),
-			configuration.image !== false && (imageItem = ToolboxItem.create(Icons.image, 'Image', null))
-		].filter(Boolean) as ToolboxItem[];
+		const hints = configuration.shortcuts !== false;
+		const item = (enabled: boolean, icon: Parameters<typeof ToolboxItem.create>[0], title: string, mode: EditorMode) =>
+			enabled && ToolboxItem.create(icon, withHint(title, mode, hints), mode);
 
+		let imageItem: ToolboxItem | null = null;
+		const groups: (ToolboxItem | false)[][] = [
+			[
+				ToolboxItem.create(Icons.cursor, withHint('Select', EditorMode.select, hints), EditorMode.select),
+				item(configuration.quickSelect !== false, Icons.quickSelect, 'Quick selection', EditorMode.quickSelect),
+				item(configuration.magicWand !== false, Icons.wand, 'Magic wand', EditorMode.magicWand)
+			],
+			[
+				item(configuration.rect !== false, Icons.rect, 'Rect', EditorMode.rect),
+				item(configuration.shape !== false, Icons.shapes, 'Shapes', EditorMode.shape),
+				item(configuration.arrow !== false, Icons.arrow, 'Arrow', EditorMode.arrow),
+				item(configuration.textbox !== false, Icons.text, 'Textbox', EditorMode.textbox),
+				item(configuration.gradient !== false, Icons.gradient, 'Gradient', EditorMode.gradient)
+			],
+			[
+				item(configuration.brush !== false, Icons.brush, 'Brush', EditorMode.brush),
+				item(configuration.eraser !== false, Icons.erase, 'Eraser', EditorMode.eraser),
+				item(configuration.clone !== false, Icons.clone, 'Clone stamp', EditorMode.clone),
+				item(configuration.blur !== false, Icons.blur, 'Blur and pixelate', EditorMode.blur)
+			],
+			[configuration.image !== false && (imageItem = ToolboxItem.create(Icons.image, 'Image', null))]
+		];
+
+		const items: ToolboxItem[] = [];
 		const toolbox = new Toolbox(view, state, items);
-		for (const item of items) {
-			top.appendChild(item.view);
-			if (item.mode) {
-				item.onClicked.subscribe(toolbox.onItemClicked);
+		groups.forEach(group => {
+			const present = group.filter(Boolean) as ToolboxItem[];
+			if (present.length === 0) {
+				return;
 			}
-		}
+			if (items.length > 0) {
+				top.appendChild(Html.div({ class: 'mce-toolbox-separator' }));
+			}
+			for (const toolboxItem of present) {
+				items.push(toolboxItem);
+				top.appendChild(toolboxItem.view);
+				if (toolboxItem.mode) {
+					toolboxItem.onClicked.subscribe(toolbox.onItemClicked);
+				}
+			}
+		});
 
 		if (imageItem) {
 			imageItem.onClicked.subscribe(toolbox.onOpenImageClicked);
+		}
+
+		if (configuration.history !== false) {
+			const undo = ToolboxItem.create(Icons.undo, hints ? 'Undo (Ctrl+Z)' : 'Undo', null);
+			const redo = ToolboxItem.create(Icons.redo, hints ? 'Redo (Ctrl+Shift+Z)' : 'Redo', null);
+			undo.onClicked.subscribe(() => state.history.undo());
+			redo.onClicked.subscribe(() => state.history.redo());
+			bottom.appendChild(undo.view);
+			bottom.appendChild(redo.view);
+			const refresh = () => {
+				undo.setIsDisabled(!state.history.canUndo());
+				redo.setIsDisabled(!state.history.canRedo());
+			};
+			state.history.onChanged.subscribe(refresh);
+			refresh();
 		}
 
 		const zoom = ToolboxZoom.create(state);

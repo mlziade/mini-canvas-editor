@@ -52,6 +52,7 @@ export class Workspace implements Component {
 	}
 
 	private currentMode?: WorkspaceMode;
+	private layoutTimer: ReturnType<typeof setTimeout> | null = null;
 
 	private constructor(
 		public readonly view: HTMLElement,
@@ -60,7 +61,8 @@ export class Workspace implements Component {
 	) {}
 
 	public startAutoLayout(center: boolean) {
-		setTimeout(() => {
+		this.layoutTimer = setTimeout(() => {
+			this.layoutTimer = null;
 			this.reloadLayout();
 			if (center) {
 				this.state.center();
@@ -70,6 +72,10 @@ export class Workspace implements Component {
 	}
 
 	public async destroy(): Promise<void> {
+		if (this.layoutTimer !== null) {
+			clearTimeout(this.layoutTimer);
+			this.layoutTimer = null;
+		}
 		if (this.currentMode) {
 			this.currentMode.destroy();
 		}

@@ -16,6 +16,7 @@ export class BoxPainter {
 	}
 
 	private object: FabricObject | null = null;
+	private endHistory: (() => void) | null = null;
 	private origX = 0;
 	private origY = 0;
 
@@ -32,6 +33,13 @@ export class BoxPainter {
 		this.state.canvas.off('mouse:move', this.onMove);
 		this.state.canvas.off('mouse:up', this.onUp);
 		this.selectionReverter.revert();
+		this.finishHistory();
+	}
+
+	private finishHistory() {
+		const end = this.endHistory;
+		this.endHistory = null;
+		end?.();
 	}
 
 	private readonly onDown = (o: TPointerEventInfo<TPointerEvent>) => {
@@ -44,9 +52,14 @@ export class BoxPainter {
 		this.origX = Math.floor(pointer.x);
 		this.origY = Math.floor(pointer.y);
 
+		// The whole drag, including the temporary object, is a single undo step.
+		const history = this.state.history;
+		const before = history.begin();
+		this.endHistory = () => history.end(before, []);
+
 		this.object = this.objectFactory();
 		this.object.set('left', this.origX);
-		this.object.set('top', this.origX);
+		this.object.set('top', this.origY);
 		this.state.add(this.object);
 	};
 
@@ -76,7 +89,12 @@ export class BoxPainter {
 			return;
 		}
 
-		this.onFinished.forward(this.object);
+		const object = this.object;
 		this.object = null;
+		try {
+			this.onFinished.forward(object);
+		} finally {
+			this.finishHistory();
+		}
 	};
 }

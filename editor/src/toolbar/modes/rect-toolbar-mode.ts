@@ -23,8 +23,7 @@ export class RectToolbarMode implements DestroyableComponent {
 	) {}
 
 	private readonly onFillColorChanged = (newColor: string) => {
-		this.state.brush.brushColor = newColor;
-		this.state.onBrushConfigurationChanged.forward();
+		this.state.rect.fillColor = newColor;
 	};
 
 	public destroy() {

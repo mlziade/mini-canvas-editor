@@ -4,9 +4,20 @@ import { SimpleEvent } from '../../core/simple-event';
 
 export interface NumberToolbarInputComponent extends Component {
 	readonly onChanged: SimpleEvent<number>;
+	setValue(value: number): void;
 }
 
-export function numberToolbarInput(labelText: string, initialValue: number): NumberToolbarInputComponent {
+export interface NumberToolbarInputConfiguration {
+	min?: number;
+	max?: number;
+	step?: number;
+}
+
+export function numberToolbarInput(
+	labelText: string,
+	initialValue: number,
+	configuration?: NumberToolbarInputConfiguration
+): NumberToolbarInputComponent {
 	function onInputChanged() {
 		const newValue = Number(input.value);
 		onChanged.forward(newValue);
@@ -22,10 +33,13 @@ export function numberToolbarInput(labelText: string, initialValue: number): Num
 	const input = Html.element('input', {
 		class: 'mce-toolbar-number-input',
 		type: 'number',
-		min: '0.5',
-		step: '0.5',
+		min: String(configuration?.min ?? 0.5),
+		step: String(configuration?.step ?? 0.5),
 		value: String(initialValue)
 	});
+	if (typeof configuration?.max === 'number') {
+		input.max = String(configuration.max);
+	}
 	input.addEventListener('change', onInputChanged, false);
 
 	const view = Html.div({
@@ -35,6 +49,9 @@ export function numberToolbarInput(labelText: string, initialValue: number): Num
 	view.appendChild(input);
 	return {
 		view,
-		onChanged
+		onChanged,
+		setValue(value: number) {
+			input.value = String(value);
+		}
 	};
 }

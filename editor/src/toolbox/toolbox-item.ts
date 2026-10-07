@@ -1,11 +1,11 @@
 import { Component } from '../components/component';
 import { Html } from '../core/html';
-import { Icons } from '../core/icons';
+import { Icons, StrokeIcon } from '../core/icons';
 import { SimpleEvent } from '../core/simple-event';
 import { EditorMode } from '../editor-configuration';
 
 export class ToolboxItem implements Component {
-	public static create(icon: string, title: string, mode: EditorMode | null) {
+	public static create(icon: string | StrokeIcon, title: string, mode: EditorMode | null) {
 		const view = Html.div({
 			class: 'mce-toolbox-item',
 			title
@@ -33,5 +33,9 @@ export class ToolboxItem implements Component {
 
 	public setIsSelected(isSelected: boolean) {
 		this.view.classList.toggle('mce-selected', isSelected);
+	}
+
+	public setIsDisabled(isDisabled: boolean) {
+		this.view.classList.toggle('mce-disabled', isDisabled);
 	}
 }

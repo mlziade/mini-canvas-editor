@@ -39,6 +39,16 @@ export class UpdateManager<Obj extends Observable<EventSpec>, EventSpec = unknow
 		return accessor;
 	}
 
+	/**
+	 * Changes the object directly, then refreshes every editor that shows one of its properties.
+	 */
+	public apply(action: (object: Obj) => void) {
+		action(this.object);
+		this.state.canvas.requestRenderAll();
+		this.onChanged.forward();
+		this.onExternalChanged();
+	}
+
 	private readonly onExternalChanged = () => {
 		for (const accessor of this.accessors) {
 			const value = accessor.getValue();

@@ -4,7 +4,8 @@ import { numberPropertyEditor } from '../editors/number-property-editor';
 import { DestroyableComponent } from '../../../components/component';
 import { commonShapeEditor } from './common-shape-editor';
 import { colorPropertyEditor } from '../editors/color-property-editor';
-import { MceRect } from 'mini-canvas-core';
+import { FabricObject, MceRect } from 'mini-canvas-core';
+import { fillPropertyEditor } from '../editors/fill-property-editor';
 
 export function rectShapeEditor(manager: UpdateManager<MceRect>): DestroyableComponent {
 	const row1 = propertyEditorRow([
@@ -43,15 +44,7 @@ export function rectShapeEditor(manager: UpdateManager<MceRect>): DestroyableCom
 		)
 	]);
 
-	const row3 = propertyEditorRow([
-		colorPropertyEditor(
-			'Fill',
-			manager.bind(
-				o => o.fill,
-				(o, v) => o.set('fill', v)
-			)
-		)
-	]);
+	const row3 = fillPropertyEditor(manager as unknown as UpdateManager<FabricObject>);
 
 	const row4 = propertyEditorRow([
 		numberPropertyEditor(

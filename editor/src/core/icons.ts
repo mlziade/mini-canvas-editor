@@ -1,5 +1,13 @@
 const ns = 'http://www.w3.org/2000/svg';
 
+/**
+ * An icon drawn with a line instead of a filled outline.
+ */
+export interface StrokeIcon {
+	stroke: string;
+}
+
+
 export class Icons {
 	public static cursor = 'm320-410 79-110h170L320-716v306ZM551-80 406-392 240-160v-720l560 440H516l144 309-109 51ZM399-520Z';
 	public static rect =
@@ -22,12 +30,35 @@ export class Icons {
 	public static arrowDown = 'M440-800v487L216-537l-56 57 320 320 320-320-56-57-224 224v-487h-80Z';
 	public static menu = 'M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z';
 
-	public static createSvg(icon: string, cls: string): SVGElement {
+	public static arrow: StrokeIcon = { stroke: 'M200-200L720-720M440-720H720V-440' };
+	public static shapes: StrokeIcon = {
+		stroke: 'M140-140H460V-460H140ZM840-640a200 200 0 1 1-400 0a200 200 0 1 1 400 0Z'
+	};
+	public static clone: StrokeIcon = {
+		stroke: 'M600-720a120 120 0 1 1-240 0a120 120 0 1 1 240 0ZM420-610L380-440H580L540-610M240-440H720V-300H240ZM200-160H760'
+	};
+	public static blur: StrokeIcon = { stroke: 'M480-820C400-700 260-560 260-420a220 220 0 0 0 440 0C700-560 560-700 480-820Z' };
+	public static wand: StrokeIcon = {
+		stroke: 'M200-200L620-620M700-800V-680M640-740H760M800-560V-480M760-520H840M500-800V-740M470-770H530'
+	};
+	public static quickSelect: StrokeIcon = {
+		stroke: 'M160-360V-160H360M600-160H800V-360M800-600V-800H600M360-800H160V-600M480-480h.1'
+	};
+	public static gradient: StrokeIcon = {
+		stroke: 'M160-160H800V-800H160ZM160-440L440-160M160-640L640-160M360-800L800-360'
+	};
+	public static undo: StrokeIcon = { stroke: 'M320-640H620a180 180 0 0 1 0 360H340M320-640L440-760M320-640L440-520' };
+	public static redo: StrokeIcon = { stroke: 'M640-640H340a180 180 0 0 0 0 360H620M640-640L520-760M640-640L520-520' };
+
+	public static createSvg(icon: string | StrokeIcon, cls: string): SVGElement {
 		const svg = document.createElementNS(ns, 'svg');
 		svg.setAttribute('viewBox', '0 -960 960 960');
 		svg.classList.add(cls);
+		if (typeof icon !== 'string') {
+			svg.classList.add('mce-stroke');
+		}
 		const path = document.createElementNS(ns, 'path');
-		path.setAttribute('d', icon);
+		path.setAttribute('d', typeof icon === 'string' ? icon : icon.stroke);
 		svg.appendChild(path);
 		return svg;
 	}
